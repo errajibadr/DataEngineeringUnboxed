@@ -34,7 +34,7 @@ don't forget to adapt your JUPYTER_WORKSPACE_LOCATION to your jupyter workspace 
 
 ```shell
 PROFILE_NAME=DEFAULT
-JUPYTER_WORKSPACE_LOCATION=~/repository/glue/local_glue_jupyter/
+JUPYTER_WORKSPACE_LOCATION=~/repository/glue/aws_glue_local_jupyter/
 AWS_REGION=eu-west-1
 PYTHONPATH=/opt/project/
 
