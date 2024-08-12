@@ -2,7 +2,9 @@
 
 in VsCode:
 For mac, command palet is `Cmd + shift + P`
-For Windows, Command palet is `Ctrl + Maj + P`
+For Windows, Command palet is `Ctrl + Maj + P`,
+
+Tip : install Markdown Command Runner Plugin, so you can directly run this commands in your terminal
 
 ### 0 - Set up AWS Credentials in ~/.aws
 
@@ -21,7 +23,7 @@ SessionToken: FQoGZXIvYXdz...
 
 ### 1 - Pull the glue image
 
-```
+```shell
  Docker Pull amazon/aws-glue-libs:glue_libs_4.0.0_image_01
 ```
 
@@ -33,10 +35,10 @@ don't forget to adapt your JUPYTER_WORKSPACE_LOCATION to your jupyter workspace 
 ```shell
 PROFILE_NAME=DEFAULT
 JUPYTER_WORKSPACE_LOCATION=~/repository/glue/local_glue_jupyter/
-AWS_REGION = eu-west-1
+AWS_REGION=eu-west-1
 PYTHONPATH=/opt/project/
 
-docker run -it -v ~/.aws:/home/glue_user/.aws -v $JUPYTER_WORKSPACE_LOCATION:/home/glue_user/workspace/jupyter_workspace/ -e AWS_PROFILE=$PROFILE_NAME -e DISABLE_SSL=true -e AWS_REGION=$AWS_REGION --rm -p 4040:4040 -p 18080:18080 -p 8998:8998 -p 8888:8888 --name glue_jupyter_lab amazon/aws-glue-libs:glue_libs_4.0.0_image_01 /home/glue_user/jupyter/jupyter_start.sh
+docker run -it --memory=8g -v ~/.aws:/home/glue_user/.aws -v $JUPYTER_WORKSPACE_LOCATION:/home/glue_user/workspace/jupyter_workspace/ -e AWS_PROFILE=$PROFILE_NAME -e DISABLE_SSL=true -e AWS_REGION=$AWS_REGION --rm -p 4040:4040 -p 18080:18080 -p 8998:8998 -p 8888:8888 --name glue_jupyter_lab amazon/aws-glue-libs:glue_libs_4.0.0_image_01 /home/glue_user/jupyter/jupyter_start.sh
 ```
 
 nb: if you want to add your project to source code accessible from your notebook;
