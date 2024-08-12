@@ -10,11 +10,11 @@ Tip : install Markdown Command Runner Plugin, so you can directly run this comma
 
 petit rappel :
 `aws sts get-session-token`
-pour obtenir des credentials temporaires. puis les coller sous [default] (le rajoute s'il n'y est pas) dans le fichier de creds.
+pour obtenir des credentials temporaires. puis les coller sous [default] (le rajoute s'il n'y est pas) dans le fichier de creds(~/.aws)
 
 cela devrait ressembler à:
 
-```
+```json
 [default]
 AccessKeyId: ASIA...
 SecretAccessKey:wJalrXUtnFEMI/K7MDENG/bPxRfiCYzEXAMPLEKEY
@@ -24,7 +24,7 @@ SessionToken: FQoGZXIvYXdz...
 ### 1 - Pull the glue image
 
 ```shell
- Docker Pull amazon/aws-glue-libs:glue_libs_4.0.0_image_01
+ Docker pull amazon/aws-glue-libs:glue_libs_4.0.0_image_01
 ```
 
 ### 2 - Run Jupyter Server in Docker

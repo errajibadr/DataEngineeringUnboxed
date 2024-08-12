@@ -11,7 +11,7 @@ pour obtenir des credentials temporaires. puis les coller sous [default] (le raj
 
 cela devrait ressembler à:
 
-```
+```json
 [default]
 AccessKeyId: ASIA...
 SecretAccessKey:wJalrXUtnFEMI/K7MDENG/bPxRfiCYzEXAMPLEKEY
@@ -20,8 +20,8 @@ SessionToken: FQoGZXIvYXdz...
 
 ### 1 - Pull the glue image
 
-```
- Docker Pull amazon/aws-glue-libs:glue_libs_4.0.0_image_01
+```shell
+ Docker pull amazon/aws-glue-libs:glue_libs_4.0.0_image_01
 ```
 
 ### 2 - VS CODE Config
@@ -32,7 +32,7 @@ SessionToken: FQoGZXIvYXdz...
 
 in this conf settings json, you should add :
 
-```
+```json
 "python.defaultInterpreterPath": "/usr/bin/python3",
 "python.analysis.extraPaths": ["/home/glue_user/aws-glue-libs/PyGlue.zip:/home/glue_user/spark/python/lib/py4j-0.10.9-src.zip:/home/glue_user/spark/python/"]
 ```
