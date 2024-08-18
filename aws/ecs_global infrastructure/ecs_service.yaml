@@ -1,0 +1,147 @@
+Mappings:
+  AccountNetworkMap:
+    Fn::Transform:
+      Name: AWS::Include
+      Parameters:
+        Location:
+          Fn::Sub: s3://your-bucket-name/network_configs/${AWS::AccountId}/${AWS::AccountId}_network.json
+
+Outputs:
+  ELBListenerRulePath:
+    Description: Ref of ELBListenerRulePath
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ELBListenerRulePath
+    Value:
+      Fn::GetAtt:
+        - ELBListenerRulePath
+        - RuleArn
+
+Parameters:
+  Owner:
+    Default: test
+    Type: String
+  ScriptsBucket:
+    Default: your-scripts-bucket-name
+    Type: String
+
+Resources:
+  ELBListenerRulePath:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn:
+            Fn::GetAtt:
+              - ElbTargetGroup
+              - TargetGroupArn
+          Type: forward
+      Conditions:
+        - Field: path-pattern
+          PathPatternConfig:
+            Values:
+              - /query-path/*
+      ListenerArn: arn:aws:elasticloadbalancing:your-region:your-account-id:listener/app/dashboard/your-resource-id/your-listener-id
+      Priority: 1
+
+  EcsTaskTestEcsHTTPV2:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Command:
+            - shell
+            - Fn::Sub: s3://${ScriptsBucket}/${Owner}/scripts/batch/ECS-Service-test-v2/src_HTTP.zip
+            - startup.sh
+          Cpu: '2048'
+          Environment:
+            - Name: AWS_DEFAULT_REGION
+              Value:
+                Ref: AWS::Region
+            - Name: SERVICE_PORT
+              Value: '80'
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - curl --fail -k http://localhost:80/ECS-Service-test/ || exit 1
+            Interval: 300
+            Retries: 2
+            Timeout: 30
+          Image: your-ecr-repo-id.dkr.ecr.your-region.amazonaws.com/your-image-name:your-tag
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-create-group: 'true'
+              awslogs-group: /your-log-group/ECS-Service-test
+              awslogs-region:
+                Ref: AWS::Region
+          Memory: 3929
+          Name: ECS-Service-test-v2
+          PortMappings:
+            - AppProtocol: http
+              ContainerPort: '80'
+              HostPort: '80'
+              Protocol: tcp
+      ExecutionRoleArn:
+        Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/${Owner}
+      Family:
+        Fn::Sub: ${Owner}_ECS-Service-test-v2
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - EC2
+      TaskRoleArn:
+        Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/${Owner}
+
+  TestEcsHTTP:
+    Type: AWS::ECS::Service
+    Properties:
+      CapacityProviderStrategy:
+        - Base: '0'
+          CapacityProvider:
+            Fn::ImportValue: your-capacity-provider
+          Weight: '1'
+      Cluster:
+        Fn::ImportValue: your-ecs-cluster
+      DeploymentConfiguration:
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+      DesiredCount: '1'
+      HealthCheckGracePeriodSeconds: 300
+      LoadBalancers:
+        - ContainerName: ECS-Service-test-v2
+          ContainerPort: '80'
+          TargetGroupArn:
+            Fn::GetAtt:
+              - ElbTargetGroup
+              - TargetGroupArn
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          SecurityGroups:
+            Fn::FindInMap:
+              - AccountNetworkMap
+              - Ref: AWS::Region
+              - DefaultSecurityGroupIds
+          Subnets:
+            Fn::FindInMap:
+              - AccountNetworkMap
+              - Ref: AWS::Region
+              - DefaultSubnetIds
+      PropagateTags: TASK_DEFINITION
+      SchedulingStrategy: REPLICA
+      ServiceName: ECS-Service-test
+      TaskDefinition:
+        Ref: EcsTaskTestEcsHTTPV2
+
+  ElbTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPath: /ECS-Service-test/
+      HealthCheckProtocol: HTTP
+      Name: ECS-Service-test-elb-tg-80
+      Port: '80'
+      Protocol: HTTP
+      TargetType: ip
+      VpcId:
+        Fn::FindInMap:
+          - AccountNetworkMap
+          - Ref: AWS::Region
+          - VpcId

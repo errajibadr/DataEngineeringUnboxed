@@ -1,0 +1,86 @@
+Mappings:
+  AccountNetworkMap:
+    Fn::Transform:
+      Name: AWS::Include
+      Parameters:
+        Location:
+          Fn::Sub: s3://your-bucket-name/network_configs/${AWS::AccountId}/${AWS::AccountId}_network.json
+Outputs:
+  Ec2EcsClusterPolicyCpAsgLtLaunchTemplate:
+    Description: Ref of Ec2EcsClusterPolicyCpAsgLtLaunchTemplate
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-LT
+    Value:
+      Ref: Ec2EcsClusterPolicyCpAsgLtLaunchTemplate
+  EcsEcsClusterPolicyCluster:
+    Description: Ref of EcsEcsClusterPolicyCluster
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ECS-Cluster
+    Value:
+      Fn::GetAtt:
+        - EcsEcsClusterPolicyCluster
+        - Arn
+  EcsEcsClusterPolicyCpCapacityprovider:
+    Description: Ref of EcsEcsClusterPolicyCpCapacityprovider
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-CP
+    Value:
+      Ref: EcsEcsClusterPolicyCpCapacityprovider
+Parameters:
+  RoleOwner:
+    Default: test_owner
+    Type: String
+  ScriptsBucket:
+    Default: your-scripts-bucket-name
+    Type: String
+Resources:
+  AutoscalingEcsClusterPolicyCpAsgGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName:
+        Fn::Sub: ${RoleOwner}_ecs_cluster_policy_cp_asg
+      DesiredCapacity: '2'
+      HealthCheckGracePeriod: 300
+      LaunchTemplate:
+        LaunchTemplateId:
+          Ref: Ec2EcsClusterPolicyCpAsgLtLaunchTemplate
+        Version:
+          Fn::GetAtt:
+            - Ec2EcsClusterPolicyCpAsgLtLaunchTemplate
+            - LatestVersionNumber
+      MaxSize: '4'
+      MinSize: '1'
+      VPCZoneIdentifier:
+        Fn::FindInMap:
+          - AccountNetworkMap
+          - Ref: AWS::Region
+          - DefaultSubnetIds
+  Ec2EcsClusterPolicyCpAsgLtLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              DeleteOnTermination: true
+              Encrypted: true
+              VolumeSize: '30'
+              VolumeType: gp2
+        IamInstanceProfile:
+          Arn: arn:aws:iam::your-account-id:instance-profile/your-instance-profile
+        ImageId: ami-xxxxxxxxxxxxxxxxx
+        InstanceType: t2.medium
+        MetadataOptions:
+          HttpTokens: required
+        SecurityGroupIds:
+          Fn::FindInMap:
+            - AccountNetworkMap
+            - Ref: AWS::Region
+            - DefaultSecurityGroupIds
+        UserData:
+          Fn::Base64: "#!/bin/bash\n\nexec > >(...)"
+      LaunchTemplateName:
+        Fn::Sub: ${RoleOwner}_ecs_cluster_policy_cp_asg_lt
