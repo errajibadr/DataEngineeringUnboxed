@@ -1,0 +1,9 @@
+Groq
+langchain
+pydantic
+instructor
+
+pydantic-settings
+Anthropic
+openai
+langsmith

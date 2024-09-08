@@ -3,3 +3,5 @@
 *.parquet
 *.csv
 pyspark/
+claude_template_prompting
+.env
