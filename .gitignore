@@ -5,3 +5,5 @@
 pyspark/
 claude_template_prompting
 .env
+.gitignore
+.DS_Store
